@@ -1,0 +1,6 @@
+(compile -s -O3 -dl statsd.scm -j statsd)
+
+(install-extension
+ 'statsd
+ '("statsd.so")
+ '(( version "0.1")))

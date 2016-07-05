@@ -1,0 +1,10 @@
+(
+(license "GPL-3")
+(category misc)
+
+(needs udp)
+(test-depends test)
+
+(author "Łukasz Korecki (lukasz@korecki.me)")
+(synopsis "Tiny client for Statsd protocol. It allows to send counters, gauges and timing information to a statsd server.")
+)
