@@ -2,11 +2,9 @@
 
 (use udp)
 
-
 ;; Generic statsd client
 (define (statsd:send statsd-host statsd-port metric)
   (let ((sock (udp-open-socket)))
-        (printf ">statsd>: ~A" metric)
         (udp-connect! sock statsd-host statsd-port)
          (udp-send sock metric)
          (udp-close-socket sock)))
@@ -22,7 +20,8 @@
      statsd-host statsd-port
      metric)))
 
-
+;; these simply implement types outlined here:
+;; https://github.com/etsy/statsd/blob/master/docs/metric_types.md
 (define (statsd:gauge host port name value)
   (statsd:-> host port name value "g"))
 
@@ -38,6 +37,8 @@
 (define (statsd:timing-with-rate host port name value rate)
   (statsd:-> host port name value (format "ms|@~A" rate)))
 
+;; XXX: this could have been a macro and it would be fun to
+;; write it, but at this point it's fine
 (define (statsd:with-timing host port name fn)
   (let* ((start-time (current-milliseconds))
          (res (fn))
