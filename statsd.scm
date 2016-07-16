@@ -4,26 +4,43 @@
 
 
 ;; Generic statsd client
-(define (send-to-statsd statsd-host statsd-port key type value)
-  (let* ((sock (udp-open-socket))
-         (payload (format "~A:~A|~A\n"
-                          key
-                          value
-                          type)))
-
-    (printf ">statsd>: ~A" payload)
-    (udp-connect! sock statsd-host statsd-port)
-    (udp-send sock payload)
-    (udp-close-socket sock)))
+(define (statsd:send statsd-host statsd-port metric)
+  (let ((sock (udp-open-socket)))
+        (printf ">statsd>: ~A" metric)
+        (udp-connect! sock statsd-host statsd-port)
+         (udp-send sock metric)
+         (udp-close-socket sock)))
 
 ;; Send a gauage to statsd, item needs to a be pair
 ;; stats key will be built out of stats-previs.(first pair)
-(define (->to-statsd stat-prefix item)
-  (let ( (qname (first item))
-         (value (last item)))
-
-    (send-to-statsd
+(define (statsd:-> statsd-host statsd-port metric-path value type)
+  (let ((metric (format "~A:~A|~A"
+                        metric-path
+                        value
+                        type)))
+    (statsd:send
      statsd-host statsd-port
-     (format "~A.~A" stat-prefix qname)
-     "g"
-     value)))
+     metric)))
+
+
+(define (statsd:gauge host port name value)
+  (statsd:-> host port name value "g"))
+
+(define (statsd:counter host port name value)
+  (statsd:-> host port name value "c"))
+
+(define (statsd:counter-with-rate host port name value rate)
+  (statsd:-> host port name value (format "c|@~A" rate)))
+
+(define (statsd:timing host port name value)
+  (statsd:-> host port name value "ms"))
+
+(define (statsd:timing-with-rate host port name value rate)
+  (statsd:-> host port name value (format "ms|@~A" rate)))
+
+(define (statsd:with-timing host port name fn)
+  (let* ((start-time (current-milliseconds))
+         (res (fn))
+         (end-time (current-milliseconds)))
+    (statsd:timing host port name (- end-time start-time))
+    res))
